@@ -7,8 +7,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "transactions")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "transactions", uniqueConstraints = @UniqueConstraint(name = "uk_transactions_reversal_of", columnNames = "reversal_of_transaction_id"))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Transaction {
 
     @Id
@@ -24,12 +28,14 @@ public class Transaction {
     private TransactionStatus status;
 
     /** For REVERSAL transactions: the original transaction being reversed. */
-    @Column
+    @Column(name = "reversal_of_transaction_id")
     private UUID reversalOfTransactionId;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist
-    void prePersist() { this.createdAt = Instant.now(); }
+    void prePersist() {
+        this.createdAt = Instant.now();
+    }
 }

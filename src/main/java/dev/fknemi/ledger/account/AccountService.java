@@ -36,4 +36,11 @@ public class AccountService {
         return accountRepository.findById(id)
                 .orElseThrow(() -> new AccountNotFoundException(id));
     }
+
+    @Transactional
+    public Account findByIdForUpdate(UUID id) {
+        return accountRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+
+    }
 }

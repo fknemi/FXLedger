@@ -10,6 +10,7 @@ import dev.fknemi.ledger.transaction.dto.TransferRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import dev.fknemi.ledger.common.exception.AccountNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -26,13 +27,13 @@ public class TransactionService {
     @Transactional
     public TransactionResponse transfer(TransferRequest request) {
         List<UUID> ordered = LockOrdering.sort(request.fromAccountId(), request.toAccountId());
-        // TODO: acquire real DB-level row locks (e.g. findByIdForUpdate) in `ordered`
-        // order,
-        // before the balance read below. Currently `ordered` is computed but not yet
-        // used to lock
-        // anything, so concurrent transfers from the same account can both pass the
-        // check below
-        // and overdraw.
+        // Lock both accounts, in deterministic order, before reading any balance.
+        // Locking in LockOrdering's sorted order (not request order) is what
+        // prevents two opposite-direction transfers between the same pair of
+        // accounts from deadlocking each other.
+        for (UUID id : ordered) {
+            accountService.findByIdForUpdate(id);
+        }
         Account sender = accountService.findEntityById(request.fromAccountId());
         Account receiver = accountService.findEntityById(request.toAccountId());
 

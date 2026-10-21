@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/ledger
     username: ledger
     password: ledger
+    hikari:
+      connection-init-sql: "SET lock_timeout = '3s'"
   jpa:
     hibernate:
       ddl-auto: validate

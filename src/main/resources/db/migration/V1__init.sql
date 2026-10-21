@@ -9,7 +9,9 @@ CREATE TABLE transactions (
     type                        TEXT        NOT NULL,
     status                      TEXT        NOT NULL,
     reversal_of_transaction_id  UUID,
-    created_at                  TIMESTAMPTZ NOT NULL
+    created_at                  TIMESTAMPTZ NOT NULL,
+    CONSTRAINT uk_transactions_reversal_of
+        UNIQUE (reversal_of_transaction_id)
 );
 
 CREATE TABLE ledger_entries (

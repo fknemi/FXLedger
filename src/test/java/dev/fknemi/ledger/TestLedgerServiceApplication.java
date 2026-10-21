@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 public class TestLedgerServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.from(LedgerServiceApplication::main).with(TestcontainersConfiguration.class).run(args);
+		SpringApplication.from(LedgerServiceApplication::main).with(TestContainersConfiguration.class).run(args);
 	}
 
 }
