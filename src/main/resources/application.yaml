@@ -1,3 +1,21 @@
 spring:
-  application:
-    name: ledger-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledger
+    username: ledger
+    password: ledger
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+    show-sql: true
+  flyway:
+    enabled: false
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
