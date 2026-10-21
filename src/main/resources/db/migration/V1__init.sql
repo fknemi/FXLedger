@@ -16,7 +16,7 @@ CREATE TABLE ledger_entries (
     id             UUID           PRIMARY KEY,
     account_id     UUID           NOT NULL REFERENCES accounts(id),
     transaction_id UUID           NOT NULL REFERENCES transactions(id),
-    currency       CHAR(3)        NOT NULL,
+    currency       VARCHAR(3)        NOT NULL,
     amount         NUMERIC(38,10) NOT NULL,
     created_at     TIMESTAMPTZ    NOT NULL
 );
@@ -26,8 +26,8 @@ CREATE INDEX idx_ledger_transaction       ON ledger_entries(transaction_id);
 
 CREATE TABLE exchange_rates (
     id            UUID           PRIMARY KEY,
-    from_currency CHAR(3)        NOT NULL,
-    to_currency   CHAR(3)        NOT NULL,
+    from_currency VARCHAR(3)        NOT NULL,
+    to_currency   VARCHAR(3)        NOT NULL,
     rate          NUMERIC(38,10) NOT NULL,
     effective_at  TIMESTAMPTZ    NOT NULL
 );

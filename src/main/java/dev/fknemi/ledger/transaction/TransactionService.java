@@ -26,31 +26,35 @@ public class TransactionService {
     @Transactional
     public TransactionResponse transfer(TransferRequest request) {
         List<UUID> ordered = LockOrdering.sort(request.fromAccountId(), request.toAccountId());
-        // TODO: acquire DB-level advisory locks in ordered order
-        Account from = accountService.findEntityById(ordered.get(0).equals(request.fromAccountId())
-                ? request.fromAccountId() : request.toAccountId());
-        Account to   = accountService.findEntityById(request.toAccountId().equals(from.getId())
-                ? request.fromAccountId() : request.toAccountId());
-
-        // Simpler: just load both
-        Account sender   = accountService.findEntityById(request.fromAccountId());
+        // TODO: acquire real DB-level row locks (e.g. findByIdForUpdate) in `ordered`
+        // order,
+        // before the balance read below. Currently `ordered` is computed but not yet
+        // used to lock
+        // anything, so concurrent transfers from the same account can both pass the
+        // check below
+        // and overdraw.
+        Account sender = accountService.findEntityById(request.fromAccountId());
         Account receiver = accountService.findEntityById(request.toAccountId());
 
         BigDecimal balance = ledgerService.getBalance(sender.getId(), request.currency());
-        if (balance.compareTo(request.amount()) < 0) throw new InsufficientFundsException();
+        if (balance.compareTo(request.amount()) < 0)
+            throw new InsufficientFundsException();
 
         Transaction tx = transactionRepository.save(Transaction.builder()
                 .type(TransactionType.TRANSFER)
                 .status(TransactionStatus.COMPLETED)
                 .build());
 
-        ledgerService.record(sender,   tx, request.currency(), request.amount().negate());
+        ledgerService.record(sender, tx, request.currency(), request.amount().negate());
         ledgerService.record(receiver, tx, request.currency(), request.amount());
 
         return TransactionResponse.from(tx);
     }
 
-    /** Used by ReversalService and ConversionService to persist a raw transaction shell. */
+    /**
+     * Used by ReversalService and ConversionService to persist a raw transaction
+     * shell.
+     */
     @Transactional
     public Transaction createRaw(TransactionType type, UUID reversalOf) {
         return transactionRepository.save(Transaction.builder()
@@ -64,5 +68,12 @@ public class TransactionService {
     public Transaction findById(UUID id) {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction not found: " + id));
+    }
+
+    @Transactional
+    public void markReversed(UUID id) {
+        Transaction original = findById(id);
+        original.setStatus(TransactionStatus.REVERSED);
+        transactionRepository.save(original);
     }
 }

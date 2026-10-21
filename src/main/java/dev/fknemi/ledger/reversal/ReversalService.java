@@ -19,27 +19,28 @@ import java.util.UUID;
 public class ReversalService {
 
     private final TransactionService transactionService;
-    private final LedgerService      ledgerService;
-    private final AccountService     accountService;
+    private final LedgerService ledgerService;
+    private final AccountService accountService;
 
     @Transactional
     public TransactionResponse reverse(UUID originalTransactionId) {
         Transaction original = transactionService.findById(originalTransactionId);
 
         List<LedgerEntry> entries = ledgerService.getEntriesForTransaction(originalTransactionId);
-        if (entries.isEmpty()) throw new RuntimeException("Transaction has no entries");
+        if (entries.isEmpty())
+            throw new RuntimeException("Transaction has no entries");
 
         Transaction reversal = transactionService.createRaw(TransactionType.REVERSAL, originalTransactionId);
 
-        // Mirror every entry with its sign flipped — works for TRANSFER and CONVERSION alike
         for (LedgerEntry e : entries) {
             ledgerService.record(
                     e.getAccount(),
                     reversal,
                     e.getCurrency(),
-                    e.getAmount().negate()
-            );
+                    e.getAmount().negate());
         }
+
+        transactionService.markReversed(original.getId());
 
         return TransactionResponse.from(reversal);
     }

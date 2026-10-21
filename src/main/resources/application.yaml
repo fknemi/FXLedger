@@ -5,11 +5,11 @@ spring:
     password: ledger
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     open-in-view: false
     show-sql: true
   flyway:
-    enabled: false
+    enabled: true
 
 server:
   port: 8080
